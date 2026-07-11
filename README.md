@@ -1,7 +1,7 @@
-# tournament_bracket_kit
+# Tournament Bracket Kit
 
 ![Pub](https://img.shields.io/badge/Pub-0.1.0-blue.svg)
-![Publisher](https://img.shields.io/badge/Publisher-futsal--planner-blue.svg)
+![Publisher](https://img.shields.io/badge/Publisher-sawongam-blue.svg)
 
 A customizable Flutter widget for **single-elimination tournament brackets**.
 
@@ -117,7 +117,7 @@ final rounds = [
 ];
 ```
 
-Map your API models into these types — the package stays UI-only.
+Map your API models into these types - the package stays UI-only.
 
 
 ## TournamentBracket constructor
