@@ -132,7 +132,7 @@ Map your API models into these types - the package stays UI-only.
 | **itemsMarginVertical** *(optional)* | `double` | `24` | Base vertical margin between first-round cards |
 | **connectorWidth** *(optional)* | `double` | `80` | Width of the elbow connector between rounds |
 | **lineColor** *(optional)* | `Color?` | `ThemeData.dividerColor` | Bracket connector line color |
-| **lineWidth** *(optional)* | `double` | `2` | Bracket connector line stroke width |
+| **lineWidth** *(optional)* | `double` | `1` | Bracket connector line stroke width |
 | **showRoundTabs** *(optional)* | `bool` | `true` | Whether to show the round tab bar above the bracket |
 | **enablePan** *(optional)* | `bool` | `true` | Whether the bracket can be panned |
 | **enableScale** *(optional)* | `bool` | `false` | Whether pinch-to-zoom is enabled |
