@@ -3,7 +3,7 @@ description: >
   A customizable Flutter widget for rendering single-elimination tournament
   brackets with pan/zoom, round tabs, and fully customizable match cards.
 version: 0.1.0
-repository: https://github.com/futsal-planner/tournament_bracket_kit
+repository: https://github.com/sawongam/tournament_bracket_kit
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
