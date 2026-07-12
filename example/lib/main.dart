@@ -31,22 +31,13 @@ class BracketDemoPage extends StatefulWidget {
 }
 
 class _BracketDemoPageState extends State<BracketDemoPage> {
-  var _useSixteen = false;
-
   @override
   Widget build(BuildContext context) {
-    final rounds =
-        _useSixteen ? dummySixteenTeamBracketRounds() : dummyBracketRounds();
+    final rounds = dummyBracketRounds();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('tournament_bracket_kit'),
-        actions: [
-          TextButton(
-            onPressed: () => setState(() => _useSixteen = !_useSixteen),
-            child: Text(_useSixteen ? '8 teams' : '16 teams'),
-          ),
-        ],
       ),
       body: SafeArea(
         child: Padding(

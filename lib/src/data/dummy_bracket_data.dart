@@ -3,50 +3,174 @@ import '../models/bracket_round.dart';
 import '../models/bracket_score.dart';
 import '../models/bracket_team.dart';
 
-/// Sample 8-team single-elimination bracket for demos and tests.
+/// FIFA-style 16-team knockout demo bracket.
 ///
-/// Rounds: Quarter Finals → Semi Finals → Final.
+/// Round of 16 → Quarter Finals → Semi Finals → Final.
 List<BracketRound> dummyBracketRounds() {
-  const t1 = BracketTeam(id: '1', name: 'Kathmandu FC');
-  const t2 = BracketTeam(id: '2', name: 'Lalitpur United');
-  const t3 = BracketTeam(id: '3', name: 'Pokhara City');
-  const t4 = BracketTeam(id: '4', name: 'Biratnagar Boys');
-  const t5 = BracketTeam(id: '5', name: 'Chitwan Warriors');
-  const t6 = BracketTeam(id: '6', name: 'Butwal Strikers');
-  const t7 = BracketTeam(id: '7', name: 'Dharan FC');
-  const t8 = BracketTeam(id: '8', name: 'Nepalgunj Stars');
+  const morocco = BracketTeam(id: '1', name: 'Morocco');
+  const canada = BracketTeam(id: '2', name: 'Canada');
+
+  const france = BracketTeam(id: '3', name: 'France');
+  const paraguay = BracketTeam(id: '4', name: 'Paraguay');
+
+  const norway = BracketTeam(id: '5', name: 'Norway');
+  const brazil = BracketTeam(id: '6', name: 'Brazil');
+
+  const england = BracketTeam(id: '7', name: 'England');
+  const mexico = BracketTeam(id: '8', name: 'Mexico');
+
+  const spain = BracketTeam(id: '9', name: 'Spain');
+  const portugal = BracketTeam(id: '10', name: 'Portugal');
+
+  const belgium = BracketTeam(id: '11', name: 'Belgium');
+  const usa = BracketTeam(id: '12', name: 'United States');
+
+  const argentina = BracketTeam(id: '13', name: 'Argentina');
+  const egypt = BracketTeam(id: '14', name: 'Egypt');
+
+  const switzerland = BracketTeam(id: '15', name: 'Switzerland');
+  const colombia = BracketTeam(id: '16', name: 'Colombia');
 
   return const [
+    BracketRound(
+      title: 'Round of 16',
+      matches: [
+        BracketMatch(
+          id: 'r16_1',
+          home: morocco,
+          away: canada,
+          isCompleted: true,
+          score: BracketScore(
+            homeScore: 3,
+            awayScore: 0,
+            winnerId: '1',
+          ),
+        ),
+        BracketMatch(
+          id: 'r16_2',
+          home: france,
+          away: paraguay,
+          isCompleted: true,
+          score: BracketScore(
+            homeScore: 1,
+            awayScore: 0,
+            winnerId: '3',
+          ),
+        ),
+        BracketMatch(
+          id: 'r16_3',
+          home: norway,
+          away: brazil,
+          isCompleted: true,
+          score: BracketScore(
+            homeScore: 2,
+            awayScore: 1,
+            winnerId: '5',
+          ),
+        ),
+        BracketMatch(
+          id: 'r16_4',
+          home: england,
+          away: mexico,
+          isCompleted: true,
+          score: BracketScore(
+            homeScore: 3,
+            awayScore: 2,
+            winnerId: '7',
+          ),
+        ),
+        BracketMatch(
+          id: 'r16_5',
+          home: spain,
+          away: portugal,
+          isCompleted: true,
+          score: BracketScore(
+            homeScore: 1,
+            awayScore: 0,
+            winnerId: '9',
+          ),
+        ),
+        BracketMatch(
+          id: 'r16_6',
+          home: belgium,
+          away: usa,
+          isCompleted: true,
+          score: BracketScore(
+            homeScore: 4,
+            awayScore: 1,
+            winnerId: '11',
+          ),
+        ),
+        BracketMatch(
+          id: 'r16_7',
+          home: argentina,
+          away: egypt,
+          isCompleted: true,
+          score: BracketScore(
+            homeScore: 3,
+            awayScore: 2,
+            winnerId: '13',
+          ),
+        ),
+        BracketMatch(
+          id: 'r16_8',
+          home: switzerland,
+          away: colombia,
+          isCompleted: true,
+          score: BracketScore(
+            homeScore: 0,
+            awayScore: 0,
+            winnerId: '15', // Switzerland won 4-3 on penalties.
+          ),
+        ),
+      ],
+    ),
     BracketRound(
       title: 'Quarter Finals',
       matches: [
         BracketMatch(
-          id: 'qf1',
-          home: t1,
-          away: t2,
+          id: 'qf_1',
+          home: france,
+          away: morocco,
           isCompleted: true,
-          score: BracketScore(homeScore: 3, awayScore: 1, winnerId: '1'),
+          score: BracketScore(
+            homeScore: 2,
+            awayScore: 0,
+            winnerId: '3',
+          ),
         ),
         BracketMatch(
-          id: 'qf2',
-          home: t3,
-          away: t4,
+          id: 'qf_2',
+          home: spain,
+          away: belgium,
           isCompleted: true,
-          score: BracketScore(homeScore: 2, awayScore: 2, winnerId: '4'),
+          score: BracketScore(
+            homeScore: 2,
+            awayScore: 1,
+            winnerId: '9',
+          ),
         ),
         BracketMatch(
-          id: 'qf3',
-          home: t5,
-          away: t6,
+          id: 'qf_3',
+          home: england,
+          away: norway,
           isCompleted: true,
-          score: BracketScore(homeScore: 0, awayScore: 1, winnerId: '6'),
+          score: BracketScore(
+            homeScore: 2,
+            awayScore: 1,
+            winnerId: '7',
+          ),
         ),
         BracketMatch(
-          id: 'qf4',
-          home: t7,
-          away: t8,
+          id: 'qf_4',
+          home: argentina,
+          away: switzerland,
           isCompleted: true,
-          score: BracketScore(homeScore: 4, awayScore: 0, winnerId: '7'),
+          score: BracketScore(
+            homeScore: 3,
+            awayScore: 1,
+            winnerId: '13',
+          ),
         ),
       ],
     ),
@@ -54,18 +178,14 @@ List<BracketRound> dummyBracketRounds() {
       title: 'Semi Finals',
       matches: [
         BracketMatch(
-          id: 'sf1',
-          home: t1,
-          away: t4,
-          isCompleted: true,
-          score: BracketScore(homeScore: 2, awayScore: 0, winnerId: '1'),
+          id: 'sf_1',
+          home: france,
+          away: spain,
         ),
         BracketMatch(
-          id: 'sf2',
-          home: t6,
-          away: t7,
-          isCompleted: false,
-          score: BracketScore(homeScore: 1, awayScore: 1),
+          id: 'sf_2',
+          home: england,
+          away: argentina,
         ),
       ],
     ),
@@ -73,64 +193,9 @@ List<BracketRound> dummyBracketRounds() {
       title: 'Final',
       matches: [
         BracketMatch(
-          id: 'f1',
-          home: t1,
-          away: null,
+          id: 'final',
         ),
       ],
-    ),
-  ];
-}
-
-/// Larger 16-team bracket (round of 16 → final) with mostly TBD slots.
-List<BracketRound> dummySixteenTeamBracketRounds() {
-  BracketTeam team(int i) => BracketTeam(id: '$i', name: 'Team $i');
-
-  final r16 = List<BracketMatch>.generate(8, (i) {
-    final a = i * 2 + 1;
-    final b = i * 2 + 2;
-    return BracketMatch(
-      id: 'r16_$i',
-      home: team(a),
-      away: team(b),
-      isCompleted: i < 4,
-      score: i < 4
-          ? BracketScore(
-              homeScore: 2,
-              awayScore: 1,
-              winnerId: '$a',
-            )
-          : null,
-    );
-  });
-
-  final qf = List<BracketMatch>.generate(4, (i) {
-    if (i < 2) {
-      final winnerId = '${i * 2 + 1}';
-      return BracketMatch(
-        id: 'qf_$i',
-        home: team(i * 2 + 1),
-        away: team(i * 2 + 3),
-        isCompleted: true,
-        score: BracketScore(homeScore: 3, awayScore: 0, winnerId: winnerId),
-      );
-    }
-    return BracketMatch(id: 'qf_$i');
-  });
-
-  return [
-    BracketRound(title: 'Round of 16', matches: r16),
-    BracketRound(title: 'Quarter Finals', matches: qf),
-    const BracketRound(
-      title: 'Semi Finals',
-      matches: [
-        BracketMatch(id: 'sf_0'),
-        BracketMatch(id: 'sf_1'),
-      ],
-    ),
-    const BracketRound(
-      title: 'Final',
-      matches: [BracketMatch(id: 'final')],
     ),
   ];
 }

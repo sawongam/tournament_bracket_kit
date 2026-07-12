@@ -17,11 +17,11 @@ typedef BracketMatchBuilder = Widget Function(
 /// Callback when a match card is tapped (used by the default card).
 typedef BracketMatchTapCallback = void Function(BracketMatch match);
 
-/// A pannable single-elimination tournament bracket.
+/// A snapping single-elimination tournament bracket.
 ///
 /// Pass ordered [rounds] (first round → final). Customize look via
-/// [matchBuilder], sizing, and line colors. Round tabs pan the viewport
-/// when [showRoundTabs] is true.
+/// [matchBuilder], sizing, and line colors. Round tabs auto-follow scroll
+/// when [showRoundTabs] is true — tapping a tab snaps the bracket to that round.
 ///
 /// ```dart
 /// TournamentBracket(
@@ -41,7 +41,7 @@ class TournamentBracket extends StatefulWidget {
     this.itemsMarginVertical = 24,
     this.connectorWidth = 80,
     this.lineColor,
-    this.lineWidth = 2,
+    this.lineWidth = 1,
     this.showRoundTabs = true,
     this.enablePan = true,
     this.enableScale = false,
@@ -81,7 +81,8 @@ class TournamentBracket extends StatefulWidget {
   /// Whether to show the round tab bar above the bracket.
   final bool showRoundTabs;
 
-  /// Whether the bracket can be panned via [InteractiveViewer].
+  /// Whether the bracket can be scrolled horizontally (round-by-round).
+  /// When false the content is shown statically.
   final bool enablePan;
 
   /// Whether pinch-to-zoom is enabled.
@@ -93,7 +94,7 @@ class TournamentBracket extends StatefulWidget {
   /// Maximum zoom when [enableScale] is true.
   final double maxScale;
 
-  /// Optional external transformation controller.
+  /// Unused – kept for API compatibility. Use [enablePan] to control scrolling.
   final TransformationController? transformationController;
 
   @override
@@ -102,9 +103,14 @@ class TournamentBracket extends StatefulWidget {
 
 class _TournamentBracketState extends State<TournamentBracket>
     with SingleTickerProviderStateMixin {
-  late TransformationController _transformationController;
+  late ScrollController _scrollController;
   TabController? _tabController;
-  var _ownsTransformationController = false;
+
+  /// Whether the tab bar triggered the current scroll (to avoid feedback loop).
+  bool _tabDrivenScroll = false;
+
+  /// Column width including the connector.
+  double get _columnStride => widget.cardWidth + widget.connectorWidth;
 
   @override
   void initState() {
@@ -115,21 +121,14 @@ class _TournamentBracketState extends State<TournamentBracket>
   @override
   void didUpdateWidget(covariant TournamentBracket oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.rounds.length != widget.rounds.length ||
-        oldWidget.transformationController != widget.transformationController) {
+    if (oldWidget.rounds.length != widget.rounds.length) {
       _disposeControllers();
       _initControllers();
     }
   }
 
   void _initControllers() {
-    if (widget.transformationController != null) {
-      _transformationController = widget.transformationController!;
-      _ownsTransformationController = false;
-    } else {
-      _transformationController = TransformationController();
-      _ownsTransformationController = true;
-    }
+    _scrollController = ScrollController()..addListener(_onScroll);
 
     if (widget.showRoundTabs && widget.rounds.isNotEmpty) {
       _tabController = TabController(length: widget.rounds.length, vsync: this)
@@ -140,23 +139,54 @@ class _TournamentBracketState extends State<TournamentBracket>
   }
 
   void _disposeControllers() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _tabController?.removeListener(_onTabChanged);
     _tabController?.dispose();
     _tabController = null;
-    if (_ownsTransformationController) {
-      _transformationController.dispose();
+  }
+
+  // ── Scroll → Tab sync ───────────────────────────────────────────────────────
+
+  void _onScroll() {
+    if (_tabDrivenScroll) return;
+    final controller = _tabController;
+    if (controller == null) return;
+
+    final offset = _scrollController.offset;
+    final stride = _columnStride;
+    if (stride <= 0) return;
+
+    // Nearest round index based on current scroll position.
+    final nearest =
+        (offset / stride).round().clamp(0, widget.rounds.length - 1);
+    if (nearest != controller.index) {
+      controller.animateTo(nearest);
     }
   }
 
+  // ── Tab → Scroll sync ───────────────────────────────────────────────────────
+
   void _onTabChanged() {
     final controller = _tabController;
-    if (controller == null || !controller.indexIsChanging) return;
-    _panToRound(controller.index);
+    if (controller == null || controller.indexIsChanging) return;
+    _scrollToRound(controller.index);
   }
 
-  void _panToRound(int index) {
-    final dx = -index * (widget.cardWidth + widget.connectorWidth) * 0.85;
-    _transformationController.value = Matrix4.translationValues(dx, 0, 0);
+  void _scrollToRound(int index) {
+    if (!_scrollController.hasClients) return;
+    _tabDrivenScroll = true;
+    final target = (index * _columnStride).clamp(
+      0.0,
+      _scrollController.position.maxScrollExtent,
+    );
+    _scrollController
+        .animateTo(
+          target,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+        )
+        .whenComplete(() => _tabDrivenScroll = false);
   }
 
   @override
@@ -189,61 +219,87 @@ class _TournamentBracketState extends State<TournamentBracket>
       itemsMarginVertical: widget.itemsMarginVertical,
     );
 
-    final bracketBody = SizedBox(
-      height: bracketHeight,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const NeverScrollableScrollPhysics(),
-        shrinkWrap: true,
-        itemCount: widget.rounds.length,
-        itemBuilder: (context, index) {
-          final round = widget.rounds[index];
-          final separatorHeight = calculateSeparatorHeight(
-            roundIndex: index,
-            itemsMarginVertical: widget.itemsMarginVertical,
-            cardHeight: widget.cardHeight,
-          );
-          return BracketRoundColumn(
-            matches: round.matches,
-            separatorHeight: separatorHeight,
-            cardHeight: widget.cardHeight,
-            cardWidth: widget.cardWidth,
-            matchBuilder: _resolvedMatchBuilder,
-          );
-        },
-        separatorBuilder: (context, index) {
-          final source = widget.rounds[index];
-          final separatorHeight = calculateSeparatorHeight(
-            roundIndex: index,
-            itemsMarginVertical: widget.itemsMarginVertical,
-            cardHeight: widget.cardHeight,
-          );
-          return BracketConnector(
-            sourceMatchCount: source.matches.length,
-            separatorHeight: separatorHeight,
-            cardHeight: widget.cardHeight,
-            lineColor: lineColor,
-            connectorWidth: widget.connectorWidth,
-            lineWidth: widget.lineWidth,
-          );
-        },
-      ),
+    // LayoutBuilder gives us the real viewport width so we can add trailing
+    // padding that makes the Final column fully scrollable into view.
+    //
+    // WHY: maxScrollExtent = totalContentWidth - viewportWidth.
+    // Offset to reach the Final = (N-1) * stride.
+    // Without padding: maxScrollExtent = (N-1)*stride + cardWidth - viewportWidth
+    //   which is always LESS than (N-1)*stride because viewportWidth > cardWidth.
+    // Fix: add trailingPadding = viewportWidth - cardWidth so
+    //   maxScrollExtent = (N-1)*stride + viewportWidth - viewportWidth = (N-1)*stride ✓
+    final bracketBody = LayoutBuilder(
+      builder: (context, constraints) {
+        final viewportWidth = constraints.maxWidth;
+        final trailingPadding =
+            (viewportWidth - widget.cardWidth).clamp(0.0, double.infinity);
+
+        final bracketList = ListView.separated(
+          controller: widget.enablePan ? _scrollController : null,
+          scrollDirection: Axis.horizontal,
+          physics: widget.enablePan
+              ? _RoundSnappingPhysics(stride: _columnStride)
+              : const NeverScrollableScrollPhysics(),
+          // Trailing padding ensures Final column reaches maxScrollExtent.
+          padding: EdgeInsets.only(left: 16.0, right: trailingPadding),
+          itemCount: widget.rounds.length,
+          itemBuilder: (context, index) {
+            final round = widget.rounds[index];
+            final separatorHeight = calculateSeparatorHeight(
+              roundIndex: index,
+              itemsMarginVertical: widget.itemsMarginVertical,
+              cardHeight: widget.cardHeight,
+            );
+            return BracketRoundColumn(
+              matches: round.matches,
+              separatorHeight: separatorHeight,
+              cardHeight: widget.cardHeight,
+              cardWidth: widget.cardWidth,
+              matchBuilder: _resolvedMatchBuilder,
+            );
+          },
+          separatorBuilder: (context, index) {
+            final source = widget.rounds[index];
+            final separatorHeight = calculateSeparatorHeight(
+              roundIndex: index,
+              itemsMarginVertical: widget.itemsMarginVertical,
+              cardHeight: widget.cardHeight,
+            );
+            return BracketConnector(
+              sourceMatchCount: source.matches.length,
+              separatorHeight: separatorHeight,
+              cardHeight: widget.cardHeight,
+              lineColor: lineColor,
+              connectorWidth: widget.connectorWidth,
+              lineWidth: widget.lineWidth,
+            );
+          },
+        );
+
+        return SizedBox(height: bracketHeight, child: bracketList);
+      },
     );
 
-    final viewer = InteractiveViewer(
-      transformationController: _transformationController,
-      constrained: false,
-      scaleEnabled: widget.enableScale,
-      panEnabled: widget.enablePan,
-      minScale: widget.minScale,
-      maxScale: widget.maxScale,
-      child: bracketBody,
-    );
+    // Wrap in scale support when requested.
+    final scrollable = widget.enableScale
+        ? InteractiveViewer(
+            constrained: false,
+            scaleEnabled: true,
+            panEnabled: false,
+            minScale: widget.minScale,
+            maxScale: widget.maxScale,
+            child: bracketBody,
+          )
+        : bracketBody;
 
     if (!widget.showRoundTabs || _tabController == null) {
-      return viewer;
+      // Wrap in vertical scroll in case bracketHeight > available height.
+      return SingleChildScrollView(child: scrollable);
     }
 
+    // Column fills available height. Expanded + SingleChildScrollView lets
+    // the bracket scroll vertically when bracketHeight > remaining space
+    // (e.g. Round of 16 on a small screen) instead of overflowing.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -251,8 +307,80 @@ class _TournamentBracketState extends State<TournamentBracket>
           titles: [for (final r in widget.rounds) r.title],
           controller: _tabController!,
         ),
-        Expanded(child: viewer),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 16.0),
+                scrollable,
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
+}
+
+/// Snapping scroll physics that locks the list to the nearest full column.
+///
+/// This gives the "page-by-round" feel without using a [PageView], so that
+/// the connector lines between rounds are still visible during the swipe.
+class _RoundSnappingPhysics extends ScrollPhysics {
+  const _RoundSnappingPhysics({required this.stride, super.parent});
+
+  /// Width of one bracket column (card + connector).
+  final double stride;
+
+  @override
+  _RoundSnappingPhysics applyTo(ScrollPhysics? ancestor) =>
+      _RoundSnappingPhysics(stride: stride, parent: buildParent(ancestor));
+
+  double _snapOffset(double offset) {
+    if (stride <= 0) return offset;
+    return (offset / stride).round() * stride;
+  }
+
+  @override
+  Simulation? createBallisticSimulation(
+    ScrollMetrics position,
+    double velocity,
+  ) {
+    // Let the parent physics generate momentum, then override the target.
+    final parent = super.createBallisticSimulation(position, velocity);
+    final currentOffset = position.pixels;
+
+    // Determine snap target: if velocity is significant, move one round in
+    // that direction; otherwise snap to nearest.
+    double targetOffset;
+    if (velocity.abs() > 200) {
+      final direction = velocity > 0 ? 1 : -1;
+      targetOffset = _snapOffset(currentOffset + direction * stride * 0.5);
+    } else {
+      targetOffset = _snapOffset(currentOffset);
+    }
+
+    targetOffset = targetOffset.clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+
+    if ((targetOffset - currentOffset).abs() < 0.5) return null;
+
+    return ScrollSpringSimulation(
+      SpringDescription.withDampingRatio(
+        mass: 1.0,
+        stiffness: 300.0,
+        ratio: 1.2,
+      ),
+      currentOffset,
+      targetOffset,
+      velocity,
+      tolerance:
+          parent?.tolerance ?? const Tolerance(velocity: 1.0, distance: 0.5),
+    );
+  }
+
+  @override
+  bool get allowImplicitScrolling => false;
 }
