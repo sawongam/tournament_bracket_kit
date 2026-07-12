@@ -7,6 +7,10 @@ A customizable Flutter widget for **single-elimination tournament brackets**.
 
 Pan across rounds, jump via round tabs, and fully customize match cards or use the built-in default card.
 
+## Demo
+
+![Tournament bracket kit demo](demo/tournament-bracket-kit-demo.gif)
+
 ## Features
 
 - **Single-elimination layout:** Renders bracket columns with elbow connectors automatically
