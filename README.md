@@ -3,9 +3,7 @@
 ![Pub](https://img.shields.io/badge/Pub-0.1.0-blue.svg)
 ![Publisher](https://img.shields.io/badge/Publisher-sawongam-blue.svg)
 
-A customizable Flutter widget for **single-elimination tournament brackets**.
-
-Pan across rounds, jump via round tabs, and fully customize match cards or use the built-in default card.
+A customizable Flutter widget for **single-elimination tournament brackets** with pan/zoom, round tabs, and fully customizable match cards.
 
 ## Demo
 
